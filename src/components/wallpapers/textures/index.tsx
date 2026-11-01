@@ -21,19 +21,6 @@ function TextureBase({ layers, children }: { layers: string; children?: ReactNod
   );
 }
 
-/**
- * 内联 SVG 分形噪声（纸张颗粒）。
- * - feTurbulence 生成灰度噪点，feComponentTransfer 把 alpha 压到 ~0.05，只留一层极轻的"纸粒"
- * - data URI 里的 # 必须写成 %23；引号用单引号避免和外层双引号冲突
- */
-const NOISE_GRAIN =
-  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'>" +
-  "<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/>" +
-  "<feColorMatrix type='saturate' values='0'/>" +
-  "<feComponentTransfer><feFuncA type='linear' slope='0.055'/></feComponentTransfer>" +
-  '</filter>' +
-  "<rect width='180' height='180' filter='url(%23n)'/></svg>\")";
-
 /** 亚麻织纹 —— 米白底 + 经纬细线交织，像铺了块亚麻桌布 */
 export function LinenWeaveWallpaper() {
   return (
@@ -43,33 +30,6 @@ export function LinenWeaveWallpaper() {
         'repeating-linear-gradient(90deg, rgba(122,100,68,0.05) 0 1px, transparent 1px 3px),' +
         'radial-gradient(circle at 18% 20%, rgba(255,255,255,0.55), transparent 42%),' +
         'linear-gradient(180deg, #f8f4ec 0%, #f2ecdf 60%, #ece4d3 100%)'
-      }
-    />
-  );
-}
-
-/** 宣纸颗粒 —— 暖米色 + 极轻分形噪声，旧纸张的细腻质感 */
-export function PaperGrainWallpaper() {
-  return (
-    <TextureBase
-      layers={
-        `${NOISE_GRAIN},` +
-        'radial-gradient(circle at 76% 16%, rgba(255,252,242,0.7), transparent 40%),' +
-        'linear-gradient(180deg, #f7f1e5 0%, #f1e8d6 55%, #eaddc6 100%)'
-      }
-    />
-  );
-}
-
-/** 云白点阵 —— 冷白底 + 浅蓝灰小圆点阵，安静干净 */
-export function DotGridWallpaper() {
-  return (
-    <TextureBase
-      layers={
-        // 点阵层必须用 "位置 / 尺寸" 语法指定平铺周期，否则整屏只画一个点
-        'radial-gradient(rgba(86,108,130,0.10) 1.1px, transparent 1.5px) 0 0 / 22px 22px repeat,' +
-        'radial-gradient(circle at 70% 24%, rgba(255,255,255,0.6), transparent 45%),' +
-        'linear-gradient(180deg, #f7fafc 0%, #eef3f8 60%, #e7edf4 100%)'
       }
     />
   );
@@ -98,19 +58,6 @@ export function LaidPaperWallpaper() {
         'repeating-linear-gradient(0deg, rgba(74,112,106,0.05) 0 1px, transparent 1px 28px),' +
         'radial-gradient(circle at 78% 20%, rgba(255,255,255,0.55), transparent 40%),' +
         'linear-gradient(180deg, #f0f6f4 0%, #e7f0ed 60%, #ddeae6 100%)'
-      }
-    />
-  );
-}
-
-/** 藕荷斜纹 —— 淡粉紫底 + 45° 织物斜纹，温柔一点的选择 */
-export function TwillWallpaper() {
-  return (
-    <TextureBase
-      layers={
-        'repeating-linear-gradient(45deg, rgba(146,106,132,0.05) 0 2px, transparent 2px 6px),' +
-        'radial-gradient(circle at 30% 22%, rgba(255,255,255,0.6), transparent 44%),' +
-        'linear-gradient(180deg, #f9f1f5 0%, #f3e7ee 60%, #ecdee8 100%)'
       }
     />
   );

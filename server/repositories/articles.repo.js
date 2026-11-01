@@ -19,6 +19,27 @@ function tagsByArticle(articleIds) {
   return map;
 }
 
+/** 写库前把各语言变体裁成「标题 + 摘要」的 JSON 字符串（正文不冗余存） */
+function serializeTranslations(translations) {
+  if (!translations || typeof translations !== 'object') return null;
+  const out = {};
+  for (const [lang, item] of Object.entries(translations)) {
+    if (item?.title) out[lang] = { title: item.title, summary: item.summary ?? '' };
+  }
+  return Object.keys(out).length ? JSON.stringify(out) : null;
+}
+
+/** translations 列存的是 JSON 字符串（只含标题/摘要），读出来还原成对象 */
+function parseTranslations(raw) {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** 列表查询：分类 / 标签 / 关键词可叠加；返回索引行，不含正文 */
 export function findArticles({ category, tag, q } = {}) {
   const where = [];
@@ -42,7 +63,8 @@ export function findArticles({ category, tag, q } = {}) {
   const rows = getDb()
     .prepare(
       `SELECT a.id, a.title, a.summary, a.category_id AS categoryId, a.rel_path AS relPath,
-              a.reads, a.status, a.created_at AS createdAt, a.updated_at AS updatedAt
+              a.reads, a.status, a.created_at AS createdAt, a.updated_at AS updatedAt,
+              a.translations
          FROM article a
         ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
         ORDER BY a.created_at DESC`,
@@ -50,19 +72,27 @@ export function findArticles({ category, tag, q } = {}) {
     .all(...params);
 
   const tagMap = tagsByArticle(rows.map((r) => r.id));
-  return rows.map((row) => ({ ...row, tagIds: tagMap.get(row.id) ?? [] }));
+  return rows.map((row) => ({
+    ...row,
+    translations: parseTranslations(row.translations),
+    tagIds: tagMap.get(row.id) ?? [],
+  }));
 }
 
 export function findArticleById(id) {
   const row = getDb()
     .prepare(
       `SELECT id, title, summary, category_id AS categoryId, rel_path AS relPath,
-              reads, status, created_at AS createdAt, updated_at AS updatedAt
+              reads, status, created_at AS createdAt, updated_at AS updatedAt, translations
          FROM article WHERE id = ?`,
     )
     .get(id);
   if (!row) return null;
-  return { ...row, tagIds: tagsByArticle([id]).get(id) ?? [] };
+  return {
+    ...row,
+    translations: parseTranslations(row.translations),
+    tagIds: tagsByArticle([id]).get(id) ?? [],
+  };
 }
 
 export function titleExists(title, excludeId = '') {
@@ -75,8 +105,9 @@ export function titleExists(title, excludeId = '') {
 export function insertArticle(article) {
   getDb()
     .prepare(
-      `INSERT INTO article (id, title, summary, category_id, rel_path, status, reads, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO article
+         (id, title, summary, category_id, rel_path, status, reads, created_at, updated_at, translations)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       article.id,
@@ -88,6 +119,7 @@ export function insertArticle(article) {
       article.reads,
       article.createdAt,
       article.updatedAt,
+      serializeTranslations(article.translations),
     );
   replaceTags(article.id, article.tagIds);
 }
@@ -96,7 +128,8 @@ export function insertArticle(article) {
 export function updateArticleIndex(article) {
   getDb()
     .prepare(
-      `UPDATE article SET title = ?, summary = ?, category_id = ?, status = ?, updated_at = ?
+      `UPDATE article SET title = ?, summary = ?, category_id = ?, status = ?, updated_at = ?,
+              translations = ?
         WHERE id = ?`,
     )
     .run(
@@ -105,6 +138,7 @@ export function updateArticleIndex(article) {
       article.categoryId,
       article.status,
       article.updatedAt,
+      serializeTranslations(article.translations),
       article.id,
     );
   if (article.tagIds) replaceTags(article.id, article.tagIds);

@@ -54,10 +54,10 @@ export function Outline() {
     return '';
   }, [editor, headings]);
 
-  // 目录只属于「当前正在看的那篇文档」。离开 /article/:id 或 /demo 后，
+  // 目录只属于「当前正在看的那篇文档」。离开 /article/:id 后，
   // editor 实例仍挂在 EditorContext 上（路由切换不会卸载它），headings 也还在，
   // 不做路由判断的话退回首页时右侧目录会一直挂着，看着像页面卡住了。
-  const isDocRoute = pathname.startsWith('/article/') || pathname === '/demo';
+  const isDocRoute = pathname.startsWith('/article/');
   if (!isDocRoute) return null;
 
   // 移动端显示为悬浮按钮

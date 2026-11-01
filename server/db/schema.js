@@ -28,7 +28,9 @@ CREATE TABLE IF NOT EXISTS article (
   status TEXT NOT NULL DEFAULT 'published',
   reads INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  -- 多语言标题/摘要（JSON，不含正文；正文在各语言的文章文件里）
+  translations TEXT
 );
 
 CREATE TABLE IF NOT EXISTS article_tag (
@@ -55,7 +57,7 @@ export const META_KEYS = {
 };
 
 /** 表结构版本：改了表结构就 +1，启动时会整库重建（反正是缓存） */
-export const SCHEMA_VERSION = '3';
+export const SCHEMA_VERSION = '4';
 
 /** 需要重建时按依赖顺序删除 */
 export const DROP_SQL = `

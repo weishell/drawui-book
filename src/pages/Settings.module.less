@@ -88,7 +88,7 @@
   font-family: inherit;
   font-size: 13px;
   color: #646a73;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   transition:
     background-color 0.18s,
     color 0.18s,
@@ -141,13 +141,27 @@
   background: transparent;
   font-family: inherit;
   text-align: left;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   transition:
     background-color 0.16s,
     color 0.16s;
 
   &:hover {
     background: rgba(31, 35, 41, 0.04);
+  }
+}
+
+/* 语言项（排第一）：淡淡的主题色底 + 描边，让它在分组里先被注意到 */
+.sideItemAccent {
+  background: color-mix(in srgb, var(--theme-primary) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-primary) 16%, transparent);
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-primary) 11%, transparent);
+  }
+
+  .sideLabel {
+    font-weight: 600;
   }
 }
 
@@ -184,6 +198,28 @@
   background: rgba(31, 35, 41, 0.05);
   font-size: 13px;
   color: #5b6472;
+
+  svg {
+    display: block;
+  }
+}
+
+/* 语言那颗地球用品牌渐变，作为"这是国际化站点"的视觉强调 */
+.sideIconAccent {
+  background: linear-gradient(135deg, #3b6bff 0%, #7c3aed 100%);
+  color: #fff;
+  box-shadow: 0 2px 7px rgba(59, 107, 255, 0.26);
+}
+
+/* 语言数量小徽标 */
+.sideBadge {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-primary) 13%, transparent);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theme-primary);
 }
 
 .sideMeta {
@@ -261,7 +297,7 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.6);
   font-family: inherit;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   transition:
     border-color 0.16s,
     background-color 0.16s,
@@ -347,7 +383,7 @@
   background: rgba(255, 255, 255, 0.5);
   font-family: inherit;
   text-align: left;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   transition:
     background-color 0.18s,
     border-color 0.18s,
@@ -454,7 +490,7 @@
   background: rgba(255, 255, 255, 0.5);
   font-family: inherit;
   text-align: left;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   transition:
     background-color 0.18s,
     border-color 0.18s;
@@ -518,7 +554,7 @@
   background: rgba(255, 255, 255, 0.55);
   font-family: inherit;
   text-align: left;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   transition:
     border-color 0.16s,
     background-color 0.16s;
@@ -597,7 +633,7 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.55);
   font-family: inherit;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   transition:
     border-color 0.16s,
     background-color 0.16s;
@@ -614,20 +650,35 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-primary) 26%, transparent);
 }
 
-.langShort {
+/* 语言徽标：每种语言一个专属渐变圆形，比灰底短码更容易一眼认出 */
+.langBadge {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: rgba(31, 35, 41, 0.05);
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
   font-size: 12px;
-  color: #5b6472;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  box-shadow: 0 2px 7px rgba(16, 24, 40, 0.16);
 }
 
 .langName {
   font-size: 13.5px;
   color: #1f2329;
+}
+
+/* English 是初始语言，给它的卡片加一个"默认"小标签 */
+.langDefaultTag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-primary) 12%, transparent);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--theme-primary);
 }
 
 .langCheck {
@@ -654,7 +705,7 @@
   background: rgba(255, 255, 255, 0.55);
   font-family: inherit;
   text-align: left;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   transition:
     border-color 0.16s,
     background-color 0.16s,
@@ -703,7 +754,7 @@
   font-family: inherit;
   font-size: 13px;
   color: #3d434c;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   transition:
     border-color 0.15s,
     color 0.15s,
@@ -784,10 +835,30 @@
   }
 
   .sideIcon,
-  .optionPreview,
-  .langShort {
+  .optionPreview {
     background: rgba(255, 255, 255, 0.07);
     color: #cbd2dc;
+  }
+
+  /* 深色下语言图标仍保留品牌渐变，别被上面的通用规则洗掉 */
+  .sideIconAccent {
+    background: linear-gradient(135deg, #3b6bff 0%, #7c3aed 100%);
+    color: #fff;
+  }
+
+  .sideItemAccent {
+    background: color-mix(in srgb, var(--theme-primary) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-primary) 26%, transparent);
+
+    &:hover {
+      background: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+    }
+  }
+
+  .sideBadge,
+  .langDefaultTag {
+    background: color-mix(in srgb, var(--theme-primary) 22%, transparent);
+    color: color-mix(in srgb, var(--theme-primary) 62%, #fff);
   }
 
   .modeSwitch {
@@ -921,205 +992,4 @@
   }
 }
 
-/* ========== 资源维护（清理无引用资源） ==========
-   视觉上沿用本页的"浅玻璃"语言：半透明白底 + 极浅描边；
-   危险动作（清理）用低饱和红，避免和主题色按钮混淆。 */
-.maintNotice {
-  margin: 0 0 18px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(31, 35, 41, 0.08);
-  background: color-mix(in srgb, var(--theme-primary) 5%, rgba(255, 255, 255, 0.62));
-  font-size: 13px;
-  line-height: 1.75;
-  color: #4b5563;
 
-  b {
-    color: #1f2329;
-    font-weight: 600;
-  }
-}
-
-.maintStats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-@media (max-width: 760px) {
-  .maintStats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.maintStat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(31, 35, 41, 0.07);
-  background: rgba(255, 255, 255, 0.55);
-
-  b {
-    font-size: 20px;
-    font-weight: 600;
-    color: #1f2329;
-    font-variant-numeric: tabular-nums;
-  }
-
-  span {
-    font-size: 12px;
-    color: #8f959e;
-  }
-}
-
-.maintActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.maintBtn,
-.maintDanger {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-family: inherit;
-  cursor: var(--cursor-pointer);
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    opacity 0.15s ease;
-
-  &:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-}
-
-.maintBtn {
-  border: 1px solid rgba(31, 35, 41, 0.12);
-  background: rgba(255, 255, 255, 0.72);
-  color: #1f2329;
-
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.92);
-  }
-}
-
-.maintDanger {
-  border: 1px solid color-mix(in srgb, #e5484d 42%, transparent);
-  background: color-mix(in srgb, #e5484d 10%, #fff);
-  color: #b42318;
-
-  &:hover:not(:disabled) {
-    background: color-mix(in srgb, #e5484d 16%, #fff);
-  }
-}
-
-.maintHint {
-  margin: 12px 0 0;
-  font-size: 12.5px;
-  line-height: 1.7;
-  color: #b42318;
-}
-
-.maintOk {
-  margin: 12px 0 0;
-  font-size: 12.5px;
-  line-height: 1.7;
-  color: #0f7b5f;
-}
-
-.maintConfirm {
-  margin-top: 16px;
-  padding: 14px 16px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, #e5484d 30%, transparent);
-  background: color-mix(in srgb, #e5484d 6%, rgba(255, 255, 255, 0.7));
-
-  p {
-    margin: 0 0 6px;
-    font-size: 13px;
-    line-height: 1.75;
-    color: #4b5563;
-
-    b {
-      color: #1f2329;
-      font-weight: 600;
-    }
-  }
-
-  .maintActions {
-    margin-top: 10px;
-  }
-}
-
-.maintWarn {
-  color: #b42318;
-}
-
-:global(.dark-mode) {
-  .maintNotice {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
-    color: #9ca3af;
-
-    b {
-      color: #e5e7eb;
-    }
-  }
-
-  .maintStat {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
-
-    b {
-      color: #e5e7eb;
-    }
-
-    span {
-      color: #6b7280;
-    }
-  }
-
-  .maintBtn {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.12);
-    color: #e5e7eb;
-
-    &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.1);
-    }
-  }
-
-  .maintDanger {
-    background: color-mix(in srgb, #e5484d 18%, transparent);
-    border-color: color-mix(in srgb, #e5484d 45%, transparent);
-    color: #ffb4b4;
-  }
-
-  .maintConfirm {
-    background: color-mix(in srgb, #e5484d 12%, transparent);
-    border-color: color-mix(in srgb, #e5484d 40%, transparent);
-
-    p {
-      color: #9ca3af;
-
-      b {
-        color: #e5e7eb;
-      }
-    }
-  }
-
-  .maintOk {
-    color: #6ee7b7;
-  }
-
-  .maintHint,
-  .maintWarn {
-    color: #fca5a5;
-  }
-}

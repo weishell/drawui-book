@@ -202,34 +202,6 @@ function WallpaperThumb({
       </div>
     );
   }
-  if (preset.kind === 'svg' && preset.id === 'warm-hearth') {
-    return (
-      <div
-        className={styles.thumbInner}
-        style={{
-          background:
-            'radial-gradient(ellipse at 68% 72%, rgba(251,146,60,0.5), transparent 34%),' +
-            'linear-gradient(180deg, #0b0705 0%, #120a08 50%, #0a0605 100%)',
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            right: 14,
-            bottom: 10,
-            width: 30,
-            height: 32,
-            borderRadius: '50% 50% 30% 30% / 60% 60% 40% 40%',
-            background:
-              'radial-gradient(ellipse at 50% 92%, #fff 0%, #fde047 22%, #fb923c 46%, rgba(248,113,113,0.0) 92%)',
-            mixBlendMode: 'screen',
-          }}
-        />
-      </div>
-    );
-  }
   return (
     <div
       className={styles.thumbInner}

@@ -4,33 +4,6 @@
   padding: 28px 0 72px;
 }
 
-/* 只读模式提示条：告诉用户为什么没有新建/管理入口、怎么开启 */
-.readonlyTip {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-bottom: 18px;
-  padding: 12px 18px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, #f0a020 35%, transparent);
-  background: color-mix(in srgb, #f0a020 7%, #fff);
-  font-size: 13px;
-  line-height: 1.7;
-  color: #8a5a12;
-
-  b {
-    flex-shrink: 0;
-  }
-
-  code {
-    padding: 1px 7px;
-    border-radius: 5px;
-    background: color-mix(in srgb, #f0a020 14%, transparent);
-    font-family: Consolas, Menlo, monospace;
-    font-size: 12.5px;
-  }
-}
-
 /* ========== Hero ==========
    整幅氛围背景铺底（背景由 pages/home/scenes.tsx 用 SVG 画，零图片资源），
    左侧再压一层可读性遮罩，保证大标题在任何场景上都清楚。
@@ -150,65 +123,6 @@
   }
 }
 
-/* ========== 背景切换器 ==========
-   直接做在 Hero 里：选完立刻看得见效果，不用跳到设置页来回试。
-   圆点用场景代表色，选中态用一圈文字色描边（深浅场景都够显眼）。 */
-.sceneBar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 30px;
-  padding-top: 18px;
-  border-top: 1px solid var(--hero-line);
-  max-width: 460px;
-}
-
-.sceneLabel {
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  color: var(--hero-sub);
-}
-
-.sceneDots {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.sceneDot {
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  cursor: var(--cursor-pointer, pointer);
-  box-shadow: 0 1px 4px rgba(16, 24, 40, 0.28);
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
-
-  &:hover {
-    transform: scale(1.14);
-  }
-}
-
-.sceneDotActive {
-  transform: scale(1.06);
-  box-shadow:
-    0 0 0 2px var(--hero-text),
-    0 2px 8px rgba(16, 24, 40, 0.3);
-}
-
-/* 深色场景下白色描边会把深色圆点整颗"漂白"成亮点，压低到半透明 */
-.heroDark .sceneDot {
-  border-color: rgba(255, 255, 255, 0.34);
-}
-
-.sceneName {
-  font-size: 12px;
-  color: var(--hero-sub);
-  min-width: 52px;
-}
-
 .heroBadge {
   display: inline-flex;
   align-items: center;
@@ -283,7 +197,7 @@
   background: var(--theme-primary);
   color: #fff;
   font-family: inherit;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary) 28%, transparent);
 
   &:hover {
@@ -308,7 +222,7 @@
 
 .heroBtnGhost {
   font-family: inherit;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
 }
 
 .heroBtnGhost:hover,
@@ -673,10 +587,6 @@
     font-size: 13.5px;
   }
 
-  .sceneBar {
-    margin-top: 24px;
-  }
-
   .block {
     margin-bottom: 34px;
   }
@@ -729,16 +639,6 @@
     border-color: color-mix(in srgb, var(--theme-primary) 55%, transparent);
     background: color-mix(in srgb, var(--theme-primary) 16%, transparent);
     color: color-mix(in srgb, var(--theme-primary) 70%, #fff);
-  }
-}
-
-:global(.dark-mode) .readonlyTip {
-  border-color: color-mix(in srgb, #f0a020 40%, transparent);
-  background: color-mix(in srgb, #f0a020 10%, transparent);
-  color: #e0b060;
-
-  code {
-    background: color-mix(in srgb, #f0a020 18%, transparent);
   }
 }
 

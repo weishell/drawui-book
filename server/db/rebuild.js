@@ -4,6 +4,16 @@ import { getDb, transaction } from './index.js';
 import { listArticleFiles } from '../storage/article-files.js';
 import { readMetaFile } from '../storage/meta-file.js';
 
+/** 索引只存标题/摘要，正文不进库 */
+function serializeTranslationMeta(translations) {
+  if (!translations || typeof translations !== 'object') return null;
+  const out = {};
+  for (const [lang, item] of Object.entries(translations)) {
+    if (item?.title) out[lang] = { title: item.title, summary: item.summary ?? '' };
+  }
+  return Object.keys(out).length ? JSON.stringify(out) : null;
+}
+
 export function rebuildIndex() {
   const db = getDb();
   const meta = readMetaFile();
@@ -35,8 +45,8 @@ export function rebuildIndex() {
 
     const insertArticle = tx.prepare(
       `INSERT OR REPLACE INTO article
-         (id, title, summary, category_id, rel_path, status, reads, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, title, summary, category_id, rel_path, status, reads, created_at, updated_at, translations)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     const insertLink = tx.prepare(
       'INSERT OR IGNORE INTO article_tag (article_id, tag_id) VALUES (?, ?)',
@@ -53,6 +63,7 @@ export function rebuildIndex() {
         a.reads,
         a.createdAt,
         a.updatedAt,
+        serializeTranslationMeta(a.translations),
       );
       for (const tagId of a.tagIds) insertLink.run(a.id, tagId);
     }

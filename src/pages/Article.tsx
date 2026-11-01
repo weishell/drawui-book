@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Modal } from 'antd';
 import type { Descendant } from 'slate';
 import BookEditor from '@/core';
 import { useEditorMode } from '@/context/EditorContext';
-import { getArticleById, getCategory } from '@/data/articles';
-import { canWrite, getCachedContent } from '@/data/store';
+import { useLanguage } from '@/context/LanguageContext';
+import { SUPPORTED_LANGUAGES, LANGUAGE_SHORT } from '@/i18n';
+import { getArticleById, getCategory, type Article as ArticleData } from '@/data/articles';
+import { localizeArticle } from '@/data/localize';
+import { canWrite, getCachedArticle } from '@/data/store';
 import {
   deleteArticleById,
-  loadArticleContent,
+  loadArticle,
   recordArticleRead,
   saveArticleContent,
 } from '@/data/bootstrap';
@@ -28,14 +32,19 @@ export default function Article() {
   const { mode } = useEditorMode();
   const navigate = useNavigate();
   const writable = canWrite();
+  const { t, i18n } = useTranslation();
+  const { language, setLanguage } = useLanguage();
+  // 当前界面语言：文章正文按这个语言取变体，切换语言时整篇即时换正文
+  const lang = i18n.language || 'en';
 
   // 正文不进快照，进页面时才按篇加载（已加载过的会命中缓存）。
   // 连同 id 一起存：切换文章时不会先闪一帧上一篇的正文
-  const [loaded, setLoaded] = useState<{ id: string; content: Descendant[] } | null>(() => {
-    const cached = getCachedContent(id);
-    return cached ? { id, content: cached } : null;
+  const [loaded, setLoaded] = useState<{ id: string; article: ArticleData } | null>(() => {
+    const cached = getCachedArticle(id);
+    return cached ? { id, article: cached } : null;
   });
-  const content = loaded && loaded.id === id ? loaded.content : null;
+  const detail = loaded && loaded.id === id ? loaded.article : null;
+  const content = detail ? localizeArticle(detail, lang).content : null;
   const [loadError, setLoadError] = useState('');
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -44,17 +53,17 @@ export default function Article() {
   const skipSaveRef = useRef(false);
 
   useEffect(() => {
-    const cached = getCachedContent(id);
-    setLoaded(cached ? { id, content: cached } : null);
+    const cached = getCachedArticle(id);
+    setLoaded(cached ? { id, article: cached } : null);
     setLoadError('');
     setSaveState('idle');
     setConfirmOpen(false);
 
     if (cached || !getArticleById(id)) return;
     let alive = true;
-    loadArticleContent(id)
+    loadArticle(id)
       .then((next) => {
-        if (alive) setLoaded({ id, content: next });
+        if (alive) setLoaded({ id, article: next });
       })
       .catch((err: unknown) => {
         if (alive) setLoadError(err instanceof Error ? err.message : '正文加载失败');
@@ -76,13 +85,13 @@ export default function Article() {
       if (!writable || skipSaveRef.current) return;
       setSaveState('saving');
       try {
-        await saveArticleContent(id, value);
+        await saveArticleContent(id, value, lang);
         setSaveState('saved');
       } catch {
         setSaveState('error');
       }
     },
-    [id, writable],
+    [id, writable, lang],
   );
 
   const handleDelete = async () => {
@@ -107,7 +116,7 @@ export default function Article() {
     <div className={styles.page}>
       <div className={styles.topBar}>
         <div className={styles.crumb}>
-          <Link to="/">首页</Link>
+          <Link to="/">{t('nav.home')}</Link>
           <span className={styles.crumbSep}>/</span>
           {cat && (
             <>
@@ -117,7 +126,20 @@ export default function Article() {
               <span className={styles.crumbSep}>/</span>
             </>
           )}
-          <span className={styles.crumbCurrent}>正文</span>
+          <span className={styles.crumbCurrent}>{t('articlePage.crumbCurrent')}</span>
+        </div>
+        <div className={styles.langRow} role="group" aria-label={t('settings.languageTitle')}>
+          {SUPPORTED_LANGUAGES.map((code) => (
+            <button
+              key={code}
+              type="button"
+              className={`${styles.langChip} ${language === code ? styles.langChipActive : ''}`}
+              onClick={() => void setLanguage(code)}
+              aria-pressed={language === code}
+            >
+              {LANGUAGE_SHORT[code]}
+            </button>
+          ))}
         </div>
         {writable && (
           <div className={styles.actions}>
@@ -136,11 +158,10 @@ export default function Article() {
       <div className={styles.editorWrap}>
         {content ? (
           <BookEditor
-            key={article.id}
+            key={`${article.id}-${lang}`}
             initialValue={content.length ? content : EMPTY_DOC}
             readOnly={mode === 'read' || !writable}
             persistKey=""
-            commentKey={article.id}
             onSave={handleSave}
           />
         ) : loadError ? (
@@ -163,7 +184,7 @@ export default function Article() {
         onOk={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       >
-        <p>文件会被移到回收站（data/.trash/），可在顶部「回收站」里恢复。</p>
+        <p>删除后文件会直接从磁盘移除，不可恢复。</p>
       </Modal>
     </div>
   );

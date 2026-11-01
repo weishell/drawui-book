@@ -41,21 +41,6 @@ export function GreenEyeWallpaper() {
   );
 }
 
-/** 暖纸米黄 —— 旧纸张质感，柔和暖光 */
-export function WarmPaperWallpaper() {
-  return (
-    <SoftTint
-      background={
-        'repeating-linear-gradient(0deg, rgba(180,150,90,0.025) 0 2px, transparent 2px 4px),' +
-        'linear-gradient(180deg, #f7eed8 0%, #f1e4c6 55%, #ecdcb9 100%)'
-      }
-    >
-      <span style={blob('6%', '70%', '36vw', 'rgba(255,250,235,0.7)')} />
-      <span style={blob('70%', '10%', '32vw', 'rgba(226,203,155,0.4)')} />
-    </SoftTint>
-  );
-}
-
 /** 晨雾青 —— 淡青渐变 + 远山与薄日 */
 export function MistMorningWallpaper() {
   return (
@@ -98,91 +83,6 @@ export function MistMorningWallpaper() {
             'polygon(0 70%, 22% 44%, 42% 68%, 61% 40%, 82% 66%, 100% 48%, 100% 100%, 0 100%)',
         }}
       />
-    </SoftTint>
-  );
-}
-
-/** 暮色暖橙 —— 黄昏暖光 + 落日 */
-export function SunsetGlowWallpaper() {
-  return (
-    <SoftTint background="linear-gradient(180deg, #fdeee2 0%, #f9ddca 48%, #f5d2c0 100%)">
-      <span style={blob('12%', '8%', '38vw', 'rgba(255,243,224,0.8)')} />
-      {/* 落日 */}
-      <span
-        style={{
-          position: 'absolute',
-          top: '16%',
-          left: '20%',
-          width: 64,
-          height: 64,
-          borderRadius: '50%',
-          background:
-            'radial-gradient(circle at 42% 38%, #fff4e0 0%, #ffd9a8 46%, rgba(255,193,138,0.35) 78%, transparent 92%)',
-        }}
-      />
-      <span style={blob('74%', '72%', '34vw', 'rgba(240,178,150,0.4)')} />
-    </SoftTint>
-  );
-}
-
-/** 樱花粉 —— 春日樱色，柔粉渐变 + 飘落花瓣 */
-export function SakuraPinkWallpaper() {
-  return (
-    <SoftTint background="linear-gradient(180deg, #fdeef3 0%, #f9e0ea 52%, #f5d6e3 100%)">
-      <span style={blob('6%', '64%', '36vw', 'rgba(255,255,255,0.65)')} />
-      <span style={blob('66%', '8%', '32vw', 'rgba(244,194,214,0.45)')} />
-      {/* 飘落花瓣 */}
-      {[
-        { t: '18%', l: '14%', r: '-12deg', s: 10 },
-        { t: '38%', l: '72%', r: '24deg', s: 8 },
-        { t: '58%', l: '34%', r: '-30deg', s: 9 },
-        { t: '78%', l: '58%', r: '10deg', s: 7 },
-        { t: '30%', l: '44%', r: '40deg', s: 6 },
-      ].map((p, i) => (
-        <span
-          key={i}
-          style={{
-            position: 'absolute',
-            top: p.t,
-            left: p.l,
-            width: p.s,
-            height: p.s * 0.72,
-            borderRadius: '60% 40% 55% 45% / 55% 60% 40% 45%',
-            background: 'rgba(247,183,209,0.55)',
-            transform: `rotate(${p.r})`,
-          }}
-        />
-      ))}
-    </SoftTint>
-  );
-}
-
-/** 薰衣草田野 —— 柔紫渐变 + 层叠田垄 */
-export function LavenderFieldWallpaper() {
-  return (
-    <SoftTint background="linear-gradient(180deg, #f1edfa 0%, #e4dcf4 55%, #ddd3ee 100%)">
-      <span style={blob('8%', '18%', '34vw', 'rgba(255,255,255,0.6)')} />
-      {/* 远近三道田垄，由淡到深 */}
-      {[
-        { h: '16%', o: 0.28, c: 'rgba(167,148,214,0.5)' },
-        { h: '12%', o: 0.5, c: 'rgba(150,128,200,0.5)' },
-        { h: '9%', o: 0.72, c: 'rgba(132,110,184,0.45)' },
-      ].map((b, i) => (
-        <span
-          key={i}
-          style={{
-            position: 'absolute',
-            bottom: `-${4 + i * 2}%`,
-            left: '-6%',
-            right: '-6%',
-            height: b.h,
-            background: b.c,
-            clipPath:
-              'polygon(0 62%, 12% 44%, 26% 60%, 42% 38%, 58% 58%, 74% 40%, 88% 58%, 100% 46%, 100% 100%, 0 100%)',
-            opacity: 1 - i * 0.22,
-          }}
-        />
-      ))}
     </SoftTint>
   );
 }
@@ -238,42 +138,6 @@ export function LakeMorningWallpaper() {
           height: 3,
           borderRadius: 3,
           background: 'rgba(255,250,235,0.6)',
-        }}
-      />
-    </SoftTint>
-  );
-}
-
-/** 雪山晨光 —— 淡冷天光 + 雪峰 */
-export function SnowPeakWallpaper() {
-  return (
-    <SoftTint background="linear-gradient(180deg, #eaf2f9 0%, #e0ebf4 55%, #d8e4ee 100%)">
-      <span style={blob('10%', '70%', '34vw', 'rgba(255,255,255,0.7)')} />
-      {/* 远雪山 */}
-      <span
-        style={{
-          position: 'absolute',
-          top: '42%',
-          left: '-6%',
-          right: '-6%',
-          height: '22%',
-          background: 'linear-gradient(180deg, #f6fafd 0%, rgba(178,200,220,0.45) 100%)',
-          clipPath:
-            'polygon(0 78%, 14% 44%, 28% 68%, 46% 26%, 64% 60%, 80% 36%, 100% 70%, 100% 100%, 0 100%)',
-        }}
-      />
-      {/* 近雪山（更淡，叠在前面） */}
-      <span
-        style={{
-          position: 'absolute',
-          top: '56%',
-          left: '-6%',
-          right: '-6%',
-          height: '18%',
-          background:
-            'linear-gradient(180deg, rgba(250,253,255,0.9) 0%, rgba(196,214,230,0.4) 100%)',
-          clipPath:
-            'polygon(0 70%, 20% 40%, 38% 64%, 58% 32%, 76% 62%, 100% 44%, 100% 100%, 0 100%)',
         }}
       />
     </SoftTint>

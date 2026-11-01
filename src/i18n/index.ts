@@ -27,9 +27,10 @@ export const LANGUAGE_SHORT: Record<AppLanguage, string> = {
   de: 'DE',
 };
 
-const STORAGE_KEY = 'mybook-language';
+// 换过 key：旧版 mybook-language 的选择不再沿用，保证国际化项目首次进入即英文。
+const STORAGE_KEY = 'drawui-language';
 
-/** 上次选择的语言（校验合法性），无记录时回退简中 */
+/** 上次选择的语言（校验合法性），无记录时回退英文（国际化项目的初始语言） */
 function readStoredLanguage(): AppLanguage {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
@@ -37,7 +38,7 @@ function readStoredLanguage(): AppLanguage {
   } catch {
     /* localStorage 不可用，忽略 */
   }
-  return 'zh';
+  return 'en';
 }
 
 i18n.use(initReactI18next).init({
@@ -51,7 +52,7 @@ i18n.use(initReactI18next).init({
     de: { translation: de },
   },
   lng: readStoredLanguage(),
-  fallbackLng: 'zh',
+  fallbackLng: 'en',
   interpolation: {
     escapeValue: false,
   },

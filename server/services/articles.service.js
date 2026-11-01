@@ -5,13 +5,13 @@ import * as repo from '../repositories/articles.repo.js';
 import {
   listArticleFiles,
   readArticleFile,
-  trashArticleFile,
+  deleteArticleFile,
   writeArticleFile,
 } from '../storage/article-files.js';
 import { badRequest, conflict, notFound } from '../utils/http-error.js';
 import { assertSafeId } from '../utils/validators.js';
 
-/** 索引行 → 前端列表项（ArticleIndex） */
+/** 索引行 → 前端列表项（ArticleIndex）；translations 只含标题/摘要 */
 function toIndex(row) {
   return {
     id: row.id,
@@ -22,6 +22,7 @@ function toIndex(row) {
     date: String(row.createdAt ?? '').slice(0, 10),
     reads: Number(row.reads ?? 0),
     updatedAt: row.updatedAt,
+    translations: row.translations,
   };
 }
 
@@ -37,12 +38,29 @@ function toDetail(article) {
     reads: Number(article.reads ?? 0),
     updatedAt: article.updatedAt,
     content: article.content ?? [],
+    // 详情里带各语言的完整正文，前端切换语言时无需再请求
+    translations: article.translations,
   };
 }
 
 const emptyDocument = () => [
   { type: 'paragraph', id: crypto.randomUUID(), children: [{ text: '' }] },
 ];
+
+/** 校验并规整多语言变体：必须是 { [lang]: { title, summary?, content? } } */
+function normalizeTranslations(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return undefined;
+  const out = {};
+  for (const [lang, item] of Object.entries(input)) {
+    if (!item || typeof item !== 'object') continue;
+    const title = String(item.title ?? '').trim();
+    if (!title) continue;
+    const next = { title, summary: String(item.summary ?? '') };
+    if (Array.isArray(item.content)) next.content = item.content;
+    out[lang] = next;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
 
 export function listArticles(query = {}) {
   return repo
@@ -77,6 +95,7 @@ export function createArticle(body = {}) {
     categoryId: body.categoryId ?? null,
     tagIds: Array.isArray(body.tagIds) ? body.tagIds : [],
     content: Array.isArray(body.content) ? body.content : emptyDocument(),
+    translations: normalizeTranslations(body.translations),
     status: body.status ?? 'published',
     reads: Number(body.reads ?? 0),
     createdAt: now,
@@ -104,6 +123,10 @@ export function updateArticle(id, body = {}) {
     categoryId: body.categoryId === undefined ? current.categoryId : body.categoryId,
     tagIds: Array.isArray(body.tagIds) ? body.tagIds : current.tagIds,
     content: Array.isArray(body.content) ? body.content : current.content,
+    translations:
+      body.translations === undefined
+        ? current.translations
+        : normalizeTranslations(body.translations),
     status: body.status === undefined ? current.status : body.status,
     updatedAt: new Date().toISOString(),
   };
@@ -113,16 +136,31 @@ export function updateArticle(id, body = {}) {
   return toDetail(article);
 }
 
-/** 自动保存：只写正文，标题/分类/标签不动 */
-export function autosaveArticle(id, content) {
+/** 自动保存：只写正文，标题/分类/标签不动；lang 非默认语言时写进对应变体 */
+export function autosaveArticle(id, body = {}) {
   assertSafeId(id);
+  const content = body.content;
   if (!Array.isArray(content)) throw badRequest('content 必须是数组');
 
   const current = readArticleFile(id);
   if (!current) throw notFound('文章不存在');
 
+  const lang = typeof body.lang === 'string' ? body.lang.trim() : '';
+  const isBaseLang = !lang || lang === 'en';
+  const translations = isBaseLang
+    ? current.translations
+    : {
+        ...(current.translations ?? {}),
+        [lang]: { ...(current.translations?.[lang] ?? { title: current.title }), content },
+      };
+
   const updatedAt = new Date().toISOString();
-  writeArticleFile({ ...current, content, updatedAt });
+  writeArticleFile({
+    ...current,
+    content: isBaseLang ? content : current.content,
+    translations,
+    updatedAt,
+  });
   repo.touchArticle(id, updatedAt);
   return { ok: true, updatedAt };
 }
@@ -144,9 +182,9 @@ export function removeArticle(id) {
   const exists = readArticleFile(id) || repo.findArticleById(id);
   if (!exists) throw notFound('文章不存在');
 
-  const trashed = trashArticleFile(id);
+  deleteArticleFile(id);
   repo.deleteArticle(id);
-  return { ok: true, trashed: Boolean(trashed), trashPath: trashed };
+  return { ok: true };
 }
 
 export function countArticles() {
@@ -192,7 +230,51 @@ export function searchArticles(query = {}) {
     const inSummary = article.summary.toLowerCase().includes(q);
     const bodyText = extractText(article.content);
     const inBody = bodyText.toLowerCase().includes(q);
-    if (!inTitle && !inSummary && !inBody) continue;
+
+    // 多语言变体同样参与搜索：标题 / 摘要 / 正文任一命中即可
+    const translations =
+      article.translations && typeof article.translations === 'object' ? article.translations : {};
+    let variant = null;
+    let variantPart = '';
+    for (const item of Object.values(translations)) {
+      if (!item) continue;
+      if (
+        String(item.title ?? '')
+          .toLowerCase()
+          .includes(q)
+      ) {
+        variant = item;
+        variantPart = 'title';
+        break;
+      }
+      if (
+        String(item.summary ?? '')
+          .toLowerCase()
+          .includes(q)
+      ) {
+        variant = item;
+        variantPart = 'summary';
+        break;
+      }
+      if (item.content && extractText(item.content).toLowerCase().includes(q)) {
+        variant = item;
+        variantPart = 'body';
+        break;
+      }
+    }
+
+    if (!inTitle && !inSummary && !inBody && !variant) continue;
+
+    const matchedIn =
+      inTitle || variantPart === 'title'
+        ? 'title'
+        : inSummary || variantPart === 'summary'
+          ? 'summary'
+          : 'body';
+    const sourceText =
+      matchedIn === 'summary'
+        ? article.summary || String(variant?.summary ?? '') || bodyText
+        : bodyText || extractText(variant?.content);
 
     hits.push({
       id: article.id,
@@ -203,8 +285,9 @@ export function searchArticles(query = {}) {
       date: String(article.createdAt ?? '').slice(0, 10),
       reads: Number(article.reads ?? 0),
       updatedAt: article.updatedAt,
-      matchedIn: inTitle ? 'title' : inSummary ? 'summary' : 'body',
-      snippet: excerpt(inTitle || inSummary ? article.summary || bodyText : bodyText, q),
+      translations: translations,
+      matchedIn,
+      snippet: excerpt(sourceText, q),
     });
   }
 

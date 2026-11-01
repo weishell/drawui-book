@@ -6,9 +6,6 @@ demo/
 # 正文：data/articles/<id>.json —— 一篇一个文件，这是数据的真相，必须提交
 # 分类标签：data/meta.json —— 同样是真相，必须提交
 # 媒体：data/media/**（图片/附件/视频）—— 必须提交，否则线上图片 404
-# 删除的文章会进 data/.trash/，留几天再清理，不用提交
-# 注意：这里没进仓库 = 换个机器恢复时被删的文章找不回来，是有意取舍
-data/.trash/
 
 # 原子写的中间产物（writeArticleFile 先写 .tmp 再 rename），异常中断会残留
 data/articles/*.tmp

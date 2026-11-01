@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="drawui-core architecture pipeline">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6f9ff"/>
+      <stop offset="1" stop-color="#eef3ff"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2f6fed"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#1f3a8a" flood-opacity="0.10"/>
+    </filter>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#c9d8f5" stroke-opacity="0.35"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#7c8db5"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="520" rx="0" fill="url(#bg)"/>
+  <rect width="1200" height="520" fill="url(#grid)"/>
+
+  <text x="64" y="86" font-family="Georgia, 'Times New Roman', serif" font-size="34" fill="#141b2d" font-weight="600">drawui-core</text>
+  <text x="64" y="120" font-family="-apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="15" fill="#5b6b8c" letter-spacing="2">CANVAS ENGINE · DATA IN, PIXELS OUT</text>
+
+  <g font-family="-apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif">
+    <g filter="url(#shadow)">
+      <rect x="64" y="220" width="186" height="104" rx="16" fill="#ffffff" stroke="#cfe0ff"/>
+      <rect x="64" y="220" width="6" height="104" rx="3" fill="url(#accent)"/>
+      <text x="92" y="268" font-size="17" fill="#141b2d" font-weight="600">Document JSON</text>
+      <text x="92" y="296" font-size="12.5" fill="#7787a6">Slate tree · schema</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect x="314" y="220" width="186" height="104" rx="16" fill="#ffffff" stroke="#cfe0ff"/>
+      <rect x="314" y="220" width="6" height="104" rx="3" fill="url(#accent)"/>
+      <text x="342" y="268" font-size="17" fill="#141b2d" font-weight="600">Model</text>
+      <text x="342" y="296" font-size="12.5" fill="#7787a6">shapes · bounds · z-order</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect x="564" y="220" width="186" height="104" rx="16" fill="#ffffff" stroke="#cfe0ff"/>
+      <rect x="564" y="220" width="6" height="104" rx="3" fill="url(#accent)"/>
+      <text x="592" y="268" font-size="17" fill="#141b2d" font-weight="600">Renderer</text>
+      <text x="592" y="296" font-size="12.5" fill="#7787a6">hit-test · snapping</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect x="814" y="220" width="186" height="104" rx="16" fill="#ffffff" stroke="#cfe0ff"/>
+      <rect x="814" y="220" width="6" height="104" rx="3" fill="url(#accent)"/>
+      <text x="842" y="268" font-size="17" fill="#141b2d" font-weight="600">Target</text>
+      <text x="842" y="296" font-size="12.5" fill="#7787a6">Canvas 2D · SVG</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect x="1064" y="220" width="72" height="104" rx="16" fill="#141b2d"/>
+      <text x="1100" y="264" font-size="12" fill="#ffffff" text-anchor="middle">PNG</text>
+      <text x="1100" y="286" font-size="12" fill="#ffffff" text-anchor="middle">SVG</text>
+      <text x="1100" y="308" font-size="12" fill="#ffffff" text-anchor="middle">PDF</text>
+    </g>
+  </g>
+
+  <g stroke="#7c8db5" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <path d="M250 272H305"/>
+    <path d="M500 272H555"/>
+    <path d="M750 272H805"/>
+    <path d="M1000 272H1055"/>
+  </g>
+
+  <text x="64" y="404" font-family="-apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="13.5" fill="#6b7a99">
+    One data model drives every surface — the editor, the preview card, the export pipeline.
+  </text>
+  <g font-family="-apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="12.5" fill="#2f6fed">
+    <text x="64" y="446">zero runtime deps on DOM</text>
+    <circle cx="262" cy="442" r="2.4" fill="#c2cfeb"/>
+    <text x="278" y="446">deterministic output</text>
+    <circle cx="426" cy="442" r="2.4" fill="#c2cfeb"/>
+    <text x="442" y="446">framework agnostic</text>
+    <circle cx="588" cy="442" r="2.4" fill="#c2cfeb"/>
+    <text x="604" y="446">tree-shakeable ESM</text>
+  </g>
+</svg>

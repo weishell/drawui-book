@@ -2,11 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSlate } from 'slate-react';
 import { useTranslation } from 'react-i18next';
 import { Element } from 'slate';
-import { useInlineComments } from '@/plugins/inline-comment';
 import { headingBlockLabel } from '@/utils/block-label';
 import {
   CodeBlockIcon,
-  CommentIcon,
   InlineCodeIcon,
   LinkIcon,
   QuoteIcon,
@@ -242,7 +240,6 @@ const BlockTypeDropdown = ({ activeBlockKey, onConvert }: BlockTypeDropdownProps
 
 export default function FloatBar() {
   const editor = useSlate();
-  const { createFromSelection } = useInlineComments();
   const [visible, setVisible] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -581,13 +578,6 @@ export default function FloatBar() {
           onClick={() => {
             setActiveMenu(null);
             setLinkOpen(true);
-          }}
-        />
-        <ToolButton
-          icon={<CommentIcon size={16} />}
-          onClick={() => {
-            const ok = createFromSelection();
-            if (ok) setVisible(false);
           }}
         />
       </div>

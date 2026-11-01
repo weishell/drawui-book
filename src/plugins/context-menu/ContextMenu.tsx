@@ -32,7 +32,6 @@ import { EmbedSettings, createEmbedElement, type EmbedAttrs } from '@/plugins/em
 import FontPicker from '@/components/FontPicker';
 import { ColorPickerPanel } from '@/components/ColorPicker';
 import { setColor, setBackgroundColor } from '@/plugins/marks';
-import { useInlineComments } from '@/plugins/inline-comment';
 import {
   convertDocBarBlock,
   type DocBarConvertTarget,
@@ -42,7 +41,6 @@ import { getLilist, sortLilist } from '@/plugins/lilist';
 import { blockTypeIconComponent } from '@/components/FloatBar/blockTypeIcons';
 import AlignIndentPanel from '@/components/AlignIndentPanel';
 import {
-  CommentIcon,
   CopyIcon,
   DropletIcon,
   GlobeIcon,
@@ -60,9 +58,6 @@ export const ContextMenu = () => {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
   const editor = useSlateStatic();
-  // 行内评论：菜单里的「评论」= 先选中整块文字，再复用 FloatBar 同款的 createFromSelection。
-  // 注意：本组件必须渲染在 InlineCommentProvider 内部（见 core/index.tsx）。
-  const { createFromSelection } = useInlineComments();
 
   // DocBar 场景：按 element.id 直接遍历 Slate 文档树找路径
   const getTargetPath = (): number[] | undefined => {
@@ -506,22 +501,6 @@ export const ContextMenu = () => {
     applyColorToBlock(() => setBackgroundColor(editor, color));
   };
 
-  // 评论：选中整块文字 → 交给行内评论（与 FloatBar 的评论按钮同一套逻辑）
-  const handleComment = () => {
-    const p = getTargetPath();
-    closeAfterAction();
-    if (!p) return;
-    try {
-      const range = Editor.range(editor, p);
-      if (Range.isCollapsed(range)) return; // 空块无可评论内容
-      Transforms.select(editor, range);
-      ReactEditor.focus(editor);
-    } catch {
-      /* ignore */
-    }
-    createFromSelection();
-  };
-
   // 子面板的当前值与可用态：文本类块才允许对齐/缩进
   const isTextFormatable = !!targetNode && isIndentable(targetNode.type);
   const currentAlign = getBlockAlign(targetNode);
@@ -952,16 +931,6 @@ export const ContextMenu = () => {
           </>
         )}
         <div className={styles.divider} />
-        <button
-          onClick={handleComment}
-          className={styles.btnAction}
-          disabled={DISABLED_ACTIONS.includes('comment')}
-        >
-          <span className={styles.actionIcon}>
-            <CommentIcon size={16} />
-          </span>
-          <span>{t('blockMenu.comment')}</span>
-        </button>
         <button
           onClick={() => handleMenuClick('cut')}
           className={styles.btnAction}

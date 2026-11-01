@@ -14,8 +14,6 @@ import type { Descendant } from 'slate';
 import { createEditor, Editor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 import { withHistory } from 'slate-history';
-import CommentSection from '@/components/comments/CommentSection';
-import type { CommentItem } from '@/data/comments';
 import {
   MenuProvider,
   ContextMenu,
@@ -32,9 +30,6 @@ import {
   withEmbed,
   withHintBlock,
   MentionController,
-  InlineCommentProvider,
-  InlineCommentBadges,
-  InlineCommentPopover,
 } from '@/plugins';
 import {
   withCodeBlock,
@@ -48,7 +43,6 @@ import {
 import { withSlashCommand, SlashMenu } from '@/editor-extensions/slash';
 import { TrailingAddZone } from '@/plugins/docbar/TrailingAddZone';
 import { withColumns } from '@/plugins';
-import { initialValue as demoInitialValue } from '@/utils/initial-value';
 import { createKeyDownHandler } from '@/events/keyboard';
 import { codeDecorate } from '@/utils/code-decoration';
 import { searchDecorate, useFindReplace } from '@/components/find-replace';
@@ -63,21 +57,21 @@ import { handleGapDoubleClick } from '@/editor-extensions/gap-dbl-click';
 
 interface EditorProps {
   readOnly?: boolean;
-  /** 初始文档内容（如文章正文）；不传则用内置的全功能示例文档 */
+  /** 初始文档内容（如文章正文）；不传则为一段空白文档 */
   initialValue?: Descendant[];
   /** 文档自动保存用的本地存储 key；传空字符串则关闭持久化 */
   persistKey?: string;
   /** 防抖后的保存回调（如提交到后端）。与 persistKey 可同时使用 */
   onSave?: (value: Descendant[]) => void;
-  /** 底部评论的存储槽位（一般传文章 id）；不传则共用 default 槽位 */
-  commentKey?: string;
-  /** 底部评论的种子评论：只有示例文档传入，真实文档保持为空 */
-  commentSeed?: CommentItem[];
 }
 
-// 文档正文持久化：评论锚点（comments 标记）就写在文档数据里，若不落盘，
-// 刷新后文档重置为初始值，评论高亮/角标会一并消失。
+// 文档正文持久化：整棵 Slate 文档落到 localStorage，刷新后仍在。
 const DOC_PERSIST_KEY = 'mybook-editor-content-v1';
+
+/** Slate 不接受空数组作为 initialValue，兜一个空段落 */
+const EMPTY_DOC: Descendant[] = [
+  { type: 'paragraph', id: 'empty-doc', children: [{ text: '' }] } as unknown as Descendant,
+];
 
 function loadPersistedDoc(key: string): Descendant[] | null {
   try {
@@ -92,11 +86,9 @@ function loadPersistedDoc(key: string): Descendant[] | null {
 
 export default function BookEditor({
   readOnly = false,
-  initialValue = demoInitialValue,
+  initialValue = EMPTY_DOC,
   persistKey = DOC_PERSIST_KEY,
   onSave,
-  commentKey = 'default',
-  commentSeed,
 }: EditorProps) {
   const { setEditor, globalFont } = useEditorMode();
   const { isDarkMode } = useTheme();
@@ -105,9 +97,6 @@ export default function BookEditor({
   const [initial] = useState<Descendant[]>(() =>
     persistKey ? (loadPersistedDoc(persistKey) ?? initialValue) : initialValue,
   );
-  // 行内评论会话变化时自增，强制 Editable 重算 decoration（core 的 onChange 是 no-op）
-  const [, setCommentTick] = useState(0);
-  const forceCommentRender = useCallback(() => setCommentTick((t) => t + 1), []);
   const editor = useMemo(
     () =>
       withDelete(
@@ -253,59 +242,50 @@ export default function BookEditor({
           {!readOnly && <MentionController isDark={isDarkMode} />}
           {!readOnly && <SlashMenu />}
           <DocBarProvider>
-            <InlineCommentProvider onCommentChange={forceCommentRender}>
-              {/* ContextMenu 需要用到行内评论（菜单里的「评论」），
-                  故必须放在 InlineCommentProvider 内部 */}
-              {!readOnly && <ContextMenu />}
-              <DocBar />
-              {!readOnly && <FloatBar />}
-              <InlineCommentBadges />
-              <InlineCommentPopover />
-              <div
-                data-paper
+            {!readOnly && <ContextMenu />}
+            <DocBar />
+            {!readOnly && <FloatBar />}
+            <div
+              data-paper
+              style={{
+                maxWidth: PAGE_WIDTH_NORMAL,
+                margin: '0 auto',
+                padding: '40px 65px',
+                // 暗黑模式：编辑纸去掉背景和边框，让底层壁纸透出来
+                // 浅色壁纸（html.light-wallpaper）：纸面用 --lw-paper 柔和底色代替纯白
+                border: isDarkMode
+                  ? 'none'
+                  : '1px solid var(--lw-paper-border, rgba(232,232,232,0.9))',
+                borderRadius: '8px',
+                backgroundColor: isDarkMode ? 'transparent' : 'var(--lw-paper, #fff)',
+                // 注意：这里【不能】用 backdrop-filter / filter / transform 之类的属性！
+                // 它们会让纸面成为 position:fixed 子元素的包含块，导致图片选中框、
+                // 缩放手柄（ResizeHandle 是 fixed 定位）脱离图片本体。
+                // 「照片壁纸透出来但仍可读」改为在壁纸层做柔化（见 wallpapers/index.ts 的 blur/veil）。
+                boxShadow: isDarkMode ? 'none' : undefined,
+                minHeight: '500px',
+                pointerEvents: readOnly ? 'none' : 'auto',
+                fontFamily: globalFont,
+                transition: 'background-color 0.2s, border-color 0.2s, box-shadow 0.2s',
+              }}
+            >
+              <Editable
+                className="caret-theme"
+                renderElement={renderElement}
+                renderLeaf={RenderLeaf}
+                placeholder="开始编写文档..."
                 style={{
-                  maxWidth: PAGE_WIDTH_NORMAL,
-                  margin: '0 auto',
-                  padding: '40px 65px',
-                  // 暗黑模式：编辑纸去掉背景和边框，让底层壁纸透出来
-                  // 浅色壁纸（html.light-wallpaper）：纸面用 --lw-paper 柔和底色代替纯白
-                  border: isDarkMode
-                    ? 'none'
-                    : '1px solid var(--lw-paper-border, rgba(232,232,232,0.9))',
-                  borderRadius: '8px',
-                  backgroundColor: isDarkMode ? 'transparent' : 'var(--lw-paper, #fff)',
-                  // 注意：这里【不能】用 backdrop-filter / filter / transform 之类的属性！
-                  // 它们会让纸面成为 position:fixed 子元素的包含块，导致图片选中框、
-                  // 缩放手柄（ResizeHandle 是 fixed 定位）脱离图片本体。
-                  // 「照片壁纸透出来但仍可读」改为在壁纸层做柔化（见 wallpapers/index.ts 的 blur/veil）。
-                  boxShadow: isDarkMode ? 'none' : undefined,
                   minHeight: '500px',
-                  pointerEvents: readOnly ? 'none' : 'auto',
-                  fontFamily: globalFont,
-                  transition: 'background-color 0.2s, border-color 0.2s, box-shadow 0.2s',
+                  outline: 'none',
                 }}
-              >
-                <Editable
-                  className="caret-theme"
-                  renderElement={renderElement}
-                  renderLeaf={RenderLeaf}
-                  placeholder="开始编写文档..."
-                  style={{
-                    minHeight: '500px',
-                    outline: 'none',
-                  }}
-                  decorate={decorate}
-                  onKeyDown={handleKeyDown}
-                  onDoubleClick={handleDoubleClick}
-                  readOnly={readOnly}
-                />
-                {/* 尾部幽灵空行：悬浮最后一个 block 下方显示 +，点击才真正生成空段落（仅编辑模式） */}
-                {!readOnly && <TrailingAddZone />}
-                {/* 全文评论：和正文同属一张「纸」，背景（含壁纸染色）连续，
-                    不会在正文和评论之间出现纸张边框 / 色差接缝 */}
-                <CommentSection storageKey={commentKey} seed={commentSeed} />
-              </div>
-            </InlineCommentProvider>
+                decorate={decorate}
+                onKeyDown={handleKeyDown}
+                onDoubleClick={handleDoubleClick}
+                readOnly={readOnly}
+              />
+              {/* 尾部幽灵空行：悬浮最后一个 block 下方显示 +，点击才真正生成空段落（仅编辑模式） */}
+              {!readOnly && <TrailingAddZone />}
+            </div>
           </DocBarProvider>
         </MenuProvider>
       </SelectionProvider>

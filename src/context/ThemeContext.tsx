@@ -84,9 +84,11 @@ const DEFAULT_WALLPAPER = 'none';
 const DEFAULT_LIGHT_WALLPAPER = 'art-ink-mountain';
 
 /* ---------------- 持久化 ----------------
-   外观属于"用户偏好"，必须跨刷新保留；存 localStorage 而不是服务端，
-   因为它是纯客户端表现层设置，换设备重设一下也不心疼。 */
-const APPEARANCE_STORAGE_KEY = 'mybook:appearance:v1';
+   配色（主题色）与明暗模式、壁纸都属于"用户偏好"，必须跨刷新保留；
+   存 localStorage 而不是服务端，因为它是纯客户端表现层设置。 */
+const APPEARANCE_STORAGE_KEY = 'drawui:appearance:v1';
+/** 旧品牌时期的 key：读一次做迁移，避免老用户的选择被清空 */
+const LEGACY_APPEARANCE_STORAGE_KEY = 'mybook:appearance:v1';
 
 interface StoredAppearance {
   theme?: ThemeId;
@@ -99,10 +101,10 @@ function isThemeId(value: unknown): value is ThemeId {
   return typeof value === 'string' && THEME_PRESETS.some((preset) => preset.id === value);
 }
 
-function readStoredAppearance(): StoredAppearance {
+/** 解析一份 JSON 偏好；结构不合法时返回空对象 */
+function parseAppearance(raw: string | null): StoredAppearance {
+  if (!raw) return {};
   try {
-    const raw = window.localStorage.getItem(APPEARANCE_STORAGE_KEY);
-    if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     const next: StoredAppearance = {};
     if (isThemeId(parsed.theme)) next.theme = parsed.theme;
@@ -110,7 +112,19 @@ function readStoredAppearance(): StoredAppearance {
     if (typeof parsed.lightWallpaper === 'string') next.lightWallpaper = parsed.lightWallpaper;
     return next;
   } catch {
-    // 隐私模式禁用 storage、或历史数据不是合法 JSON —— 一律退回默认值，不影响启动
+    // 历史数据不是合法 JSON —— 退回默认值，不影响启动
+    return {};
+  }
+}
+
+function readStoredAppearance(): StoredAppearance {
+  try {
+    // 新 key 优先；没有再用旧 key（浏览器已禁用 storage 时直接进 catch）
+    const current = parseAppearance(window.localStorage.getItem(APPEARANCE_STORAGE_KEY));
+    if (current.theme || current.wallpaper || current.lightWallpaper) return current;
+    return parseAppearance(window.localStorage.getItem(LEGACY_APPEARANCE_STORAGE_KEY));
+  } catch {
+    // 隐私模式禁用 storage —— 一律退回默认值
     return {};
   }
 }

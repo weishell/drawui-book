@@ -22,9 +22,9 @@ export function update(req, res) {
   res.json(articlesService.updateArticle(req.params.id, req.body));
 }
 
-/** 自动保存：前端只提交正文数组 */
+/** 自动保存：前端提交正文数组 + 当前语言 */
 export function autosave(req, res) {
-  res.json(articlesService.autosaveArticle(req.params.id, req.body?.content));
+  res.json(articlesService.autosaveArticle(req.params.id, req.body ?? {}));
 }
 
 /** 阅读计数：进入文章页时调用，返回最新阅读量 */

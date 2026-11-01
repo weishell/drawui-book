@@ -9,14 +9,13 @@ import {
   FILES_DIR,
   IMAGES_DIR,
   PORT,
-  TRASH_DIR,
   VIDEOS_DIR,
 } from './config.js';
 import { getDb, closeDb, dbFileInfo } from './db/index.js';
 import { rebuildIndex } from './db/rebuild.js';
 import { createApp } from './app.js';
 
-for (const dir of [ARTICLES_DIR, TRASH_DIR, IMAGES_DIR, FILES_DIR, VIDEOS_DIR, COVERS_DIR]) {
+for (const dir of [ARTICLES_DIR, IMAGES_DIR, FILES_DIR, VIDEOS_DIR, COVERS_DIR]) {
   fs.mkdirSync(dir, { recursive: true });
 }
 

@@ -11,8 +11,6 @@ export const ROOT_DIR = path.resolve(__dirname, '..');
 export const DATA_DIR = path.join(ROOT_DIR, 'data');
 /** 文章正文目录：data/articles/<id>.json */
 export const ARTICLES_DIR = path.join(DATA_DIR, 'articles');
-/** 删除的文章移到 here，可人工恢复 */
-export const TRASH_DIR = path.join(DATA_DIR, '.trash');
 /** 分类 / 标签（站点元数据） */
 export const META_FILE = path.join(DATA_DIR, 'meta.json');
 
@@ -24,9 +22,6 @@ export const VIDEOS_DIR = path.join(MEDIA_DIR, 'videos');
 export const COVERS_DIR = path.join(IMAGES_DIR, 'covers');
 /** 画板数据：data/media/drawboards/<file>.json，文章里只存相对路径 */
 export const DRAWBOARDS_DIR = path.join(MEDIA_DIR, 'drawboards');
-
-/* ---------------- 全文评论：一篇一个 JSON（data/comments/<articleId>.json） ---------------- */
-export const COMMENTS_DIR = path.join(DATA_DIR, 'comments');
 
 /* ---------------- 索引库（缓存层，可随时删除重建） ---------------- */
 export const DATABASE_DIR = path.join(ROOT_DIR, 'database');

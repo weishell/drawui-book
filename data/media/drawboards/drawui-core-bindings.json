@@ -1,0 +1,64 @@
+[
+  {
+    "id": "src-box",
+    "type": "rounded-rectangle",
+    "x": 60,
+    "y": 170,
+    "width": 220,
+    "height": 100,
+    "borderRadius": 14,
+    "rotation": 0,
+    "text": "Source shape",
+    "style": {
+      "strokeColor": "#3b82f6",
+      "fillColor": "#eef4ff",
+      "fillOpacity": 0.95,
+      "strokeWidth": 2,
+      "strokeDash": null
+    },
+    "fontSize": 16,
+    "textColor": "#141b2d"
+  },
+  {
+    "id": "tgt-box",
+    "type": "rounded-rectangle",
+    "x": 480,
+    "y": 170,
+    "width": 220,
+    "height": 100,
+    "borderRadius": 14,
+    "rotation": 0,
+    "text": "Target shape",
+    "style": {
+      "strokeColor": "#0f9d74",
+      "fillColor": "#ecfdf5",
+      "fillOpacity": 0.95,
+      "strokeWidth": 2,
+      "strokeDash": null
+    },
+    "fontSize": 16,
+    "textColor": "#141b2d"
+  },
+  {
+    "id": "bind-arrow",
+    "type": "arrow",
+    "x": 280,
+    "y": 220,
+    "points": [
+      { "x": 280, "y": 220 },
+      { "x": 480, "y": 220 }
+    ],
+    "rotation": 0,
+    "style": {
+      "strokeColor": "#7c8db5",
+      "fillColor": "transparent",
+      "strokeWidth": 2,
+      "strokeDash": null
+    },
+    "startBinding": { "toShapeId": "src-box", "handle": "right" },
+    "endBinding": { "toShapeId": "tgt-box", "handle": "left", "auto": false },
+    "connectionType": "polyline",
+    "arrowHead": "end",
+    "dashed": false
+  }
+]

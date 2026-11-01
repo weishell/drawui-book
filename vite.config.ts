@@ -5,6 +5,9 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   server: {
+    // 显式监听所有网卡：默认只绑 IPv6 环回（::1），
+    // 于是浏览器打开 http://127.0.0.1:5173 会直接连不上（"网页打不开"）。
+    host: true,
     // 本地后端（pnpm dev:server）：前端仍走同源 /api，省掉 CORS
     proxy: {
       '/api': 'http://localhost:3001',

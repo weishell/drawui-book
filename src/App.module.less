@@ -22,12 +22,23 @@
 }
 
 .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 18px;
   font-weight: 600;
   color: @text-primary;
   text-decoration: none;
   white-space: nowrap;
   transition: color 0.2s;
+}
+
+.logoMark {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  flex: none;
 }
 
 /* logo + 主导航：导航贴着 logo 放，右侧只留搜索 */
@@ -46,6 +57,9 @@
 
 .navLink {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 13.5px;
@@ -60,6 +74,17 @@
     color: var(--theme-primary);
     background: color-mix(in srgb, var(--theme-primary) 7%, transparent);
   }
+}
+
+/* 导航图标：线性 SVG，跟随文字色，选中时略微提亮 */
+.navIcon {
+  display: block;
+  flex: none;
+  opacity: 0.82;
+}
+
+.navLinkActive .navIcon {
+  opacity: 1;
 }
 
 /* 当前页：主题色文字 + 底部一小段色条，比整块实底更安静 */

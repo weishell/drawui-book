@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Pagination } from 'antd';
 import {
   ARTICLE_PAGE_SIZE,
@@ -21,6 +22,7 @@ interface ListMeta {
 }
 
 export default function ArticleList({ kind }: { kind: 'category' | 'tag' | 'all' }) {
+  const { t } = useTranslation();
   const { name = '' } = useParams();
   const [page, setPage] = useState(1);
 
@@ -42,18 +44,18 @@ export default function ArticleList({ kind }: { kind: 'category' | 'tag' | 'all'
         : { title: '', subtitle: '', color: '', icon: '' };
     }
     if (kind === 'tag') {
-      const t = getTag(name);
-      return t
-        ? { title: t.name, subtitle: `# ${t.name}`, color: t.color, icon: '#' }
+      const tag = getTag(name);
+      return tag
+        ? { title: tag.name, subtitle: `# ${tag.name}`, color: tag.color, icon: '#' }
         : { title: '', subtitle: '', color: '', icon: '' };
     }
     return {
-      title: '全部文章',
-      subtitle: '浏览全部文章',
+      title: t('list.allTitle'),
+      subtitle: t('list.allSubtitle'),
       color: 'var(--theme-primary)',
       icon: '📚',
     };
-  }, [kind, name]);
+  }, [kind, name, t]);
 
   if (kind !== 'all' && !meta.title) return <NotFound />;
 
@@ -70,13 +72,13 @@ export default function ArticleList({ kind }: { kind: 'category' | 'tag' | 'all'
   return (
     <div className={styles.page}>
       <div className={styles.crumb}>
-        <Link to="/">首页</Link>
+        <Link to="/">{t('nav.home')}</Link>
         <span className={styles.crumbSep}>/</span>
         <span style={{ color: meta.color }}>
           {kind === 'category'
-            ? `分类 · ${meta.title}`
+            ? t('list.categoryPrefix', { name: meta.title })
             : kind === 'tag'
-              ? `标签 · ${meta.title}`
+              ? t('list.tagPrefix', { name: meta.title })
               : meta.title}
         </span>
       </div>
@@ -88,13 +90,15 @@ export default function ArticleList({ kind }: { kind: 'category' | 'tag' | 'all'
         <div>
           <h1 className={styles.title}>{meta.title}</h1>
           <p className={styles.subtitle}>
-            {meta.subtitle} · 共 {total} 篇，每页 {pageSize} 篇
+            {meta.subtitle} · {t('list.countInfo', { count: total, pageSize })}
           </p>
         </div>
       </header>
 
       {pageArticles.length === 0 ? (
-        <div className={styles.empty}>{kind === 'all' ? '还没有文章' : '该分类下暂时没有文章'}</div>
+        <div className={styles.empty}>
+          {kind === 'all' ? t('list.emptyAll') : t('list.emptyFiltered')}
+        </div>
       ) : (
         <>
           <div className={styles.list}>
@@ -110,7 +114,7 @@ export default function ArticleList({ kind }: { kind: 'category' | 'tag' | 'all'
                 pageSize={pageSize}
                 onChange={handlePageChange}
                 showSizeChanger={false}
-                showTotal={(t) => `共 ${t} 篇`}
+                showTotal={(count) => t('list.total', { count })}
               />
             </div>
           )}

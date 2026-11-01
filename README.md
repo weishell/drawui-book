@@ -1,4 +1,4 @@
-# MyBook Editor
+# drawui
 
 基于 Slate 的文档编辑器（React + Slate + Antd + TypeScript + Vite）
 

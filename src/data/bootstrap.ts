@@ -1,16 +1,16 @@
 // 数据访问层：开发环境走本地 API，生产环境走静态 JSON
 // 两者形状完全一致，页面只认这里暴露的函数
 import type { Descendant } from 'slate';
-import type { Article, ArticleIndex, ArticleInput, Category, Tag, TrashEntry } from './types';
+import type { Article, ArticleIndex, ArticleInput, Category, Tag } from './types';
 import {
   canWrite,
-  clearContentCache,
-  getCachedContent,
+  clearArticleCache,
+  getCachedArticle,
   getDataState,
-  setCachedContent,
+  setCachedArticle,
   setDataState,
 } from './store';
-import { DEMO_ARTICLES, DEMO_CATEGORIES, DEMO_TAGS } from './demo-data';
+import { ARTICLE_BASE_LANG } from './localize';
 
 /** 开发：/api/*（Vite 代理到本地 3001）｜生产：/data/*.json（构建产物） */
 const IS_DEV = import.meta.env.DEV;
@@ -41,9 +41,10 @@ const toIndex = (article: Article): ArticleIndex => ({
   date: article.date,
   reads: article.reads,
   updatedAt: article.updatedAt,
+  translations: article.translations,
 });
 
-/** 启动时灌一次快照：失败则退回内置示例数据，保证页面永远有内容可读 */
+/** 启动时灌一次快照：失败则进入只读空状态，不再回退到任何示例内容 */
 export async function bootstrapData(): Promise<void> {
   try {
     const [meta, articles] = await Promise.all([
@@ -59,31 +60,23 @@ export async function bootstrapData(): Promise<void> {
       source: IS_DEV ? 'api' : 'static',
     });
   } catch (err) {
-    console.warn('[data] 数据源不可用，回退到内置示例数据：', err);
-    clearContentCache();
-    for (const article of DEMO_ARTICLES) setCachedContent(article.id, article.content);
-    setDataState({
-      categories: DEMO_CATEGORIES,
-      tags: DEMO_TAGS,
-      articles: DEMO_ARTICLES.map(toIndex),
-      source: 'demo',
-    });
+    console.warn('[data] 数据源不可用，进入只读空状态：', err);
+    clearArticleCache();
+    setDataState({ categories: [], tags: [], articles: [], source: 'offline' });
   }
 }
 
-/** 取单篇正文：先看缓存，未命中再请求（线上按篇拆文件，本地走 API） */
+/** 取单篇：先看缓存，未命中再请求（线上按篇拆文件，本地走 API） */
 export async function loadArticle(id: string): Promise<Article> {
-  const cached = getCachedContent(id);
-  if (cached) {
-    const index = getDataState().articles.find((a) => a.id === id);
-    if (index) return { ...index, content: cached };
-  }
+  const cached = getCachedArticle(id);
+  if (cached) return cached;
 
   const article = await fetchJson<Article>(
     IS_DEV ? `${API_BASE}/articles/${id}` : `${STATIC_BASE}/articles/${id}.json`,
   );
-  setCachedContent(id, article.content ?? []);
-  return { ...article, content: article.content ?? [] };
+  const next: Article = { ...article, content: article.content ?? [] };
+  setCachedArticle(id, next);
+  return next;
 }
 
 export async function loadArticleContent(id: string): Promise<Descendant[]> {
@@ -113,23 +106,42 @@ export async function createArticle(input: ArticleInput): Promise<ArticleIndex> 
       ],
     }),
   });
-  setCachedContent(created.id, created.content ?? []);
+  const createdNext: Article = { ...created, content: created.content ?? [] };
+  setCachedArticle(created.id, createdNext);
   setDataState({ articles: [toIndex(created), ...getDataState().articles] });
   return toIndex(created);
 }
 
-/** 自动保存：只提交正文 */
-export async function saveArticleContent(id: string, content: Descendant[]): Promise<void> {
+/** 自动保存：只提交正文；lang 非默认语言时写进该语言的 translations 变体 */
+export async function saveArticleContent(
+  id: string,
+  content: Descendant[],
+  lang: string = ARTICLE_BASE_LANG,
+): Promise<void> {
   if (!canWrite()) return;
   const res = await fetchJson<{ ok: boolean; updatedAt: string }>(
     `${API_BASE}/articles/${id}/autosave`,
     {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, lang }),
     },
   );
-  setCachedContent(id, content);
+  const cached = getCachedArticle(id);
+  if (cached) {
+    if (lang === ARTICLE_BASE_LANG) {
+      setCachedArticle(id, { ...cached, content });
+    } else {
+      const variant = cached.translations?.[lang];
+      setCachedArticle(id, {
+        ...cached,
+        translations: {
+          ...(cached.translations ?? {}),
+          [lang]: { title: variant?.title ?? cached.title, ...variant, content },
+        },
+      });
+    }
+  }
   setDataState({
     articles: getDataState().articles.map((a) =>
       a.id === id ? { ...a, updatedAt: res.updatedAt } : a,
@@ -162,11 +174,11 @@ export async function recordArticleRead(id: string): Promise<number | null> {
   }
 }
 
-/** 删除（服务端会移到 data/.trash，可人工恢复） */
+/** 删除（服务端直接从磁盘移除） */
 export async function deleteArticleById(id: string): Promise<void> {
   if (!canWrite()) throw new Error('当前为只读模式，无法删除文档');
   await fetchJson<{ ok: boolean }>(`${API_BASE}/articles/${id}`, { method: 'DELETE' });
-  clearContentCache();
+  clearArticleCache();
   setDataState({ articles: getDataState().articles.filter((a) => a.id !== id) });
 }
 
@@ -274,52 +286,4 @@ export async function deleteTag(id: string): Promise<TaxonomyResponse> {
   return applyTaxonomy(
     await fetchJson<TaxonomyResponse>(`${API_BASE}/tags/${id}`, { method: 'DELETE' }),
   );
-}
-
-// ---------------------------------------------------------------------------
-// 回收站（仅本地 API 模式）：data/.trash/ 下的文件由后端读取
-// ---------------------------------------------------------------------------
-
-export interface TrashListResult {
-  items: TrashEntry[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
-
-export interface TrashBatchResult {
-  restored?: { name: string; id: string; title: string }[];
-  deleted?: string[];
-  failed: { name: string; error: string }[];
-}
-
-/** 回收站列表：支持关键词（标题/摘要/正文）与分页 */
-export async function listTrash(
-  params: { q?: string; page?: number; pageSize?: number } = {},
-): Promise<TrashListResult> {
-  const query = new URLSearchParams();
-  if (params.q) query.set('q', params.q);
-  query.set('page', String(params.page ?? 1));
-  query.set('pageSize', String(params.pageSize ?? 50));
-  return fetchJson<TrashListResult>(`${API_BASE}/trash?${query.toString()}`);
-}
-
-/** 批量恢复：后端把文件移回 data/articles/ 并重建索引 */
-export async function restoreTrash(names: string[]): Promise<TrashBatchResult> {
-  if (!canWrite()) throw new Error('当前为只读模式，无法恢复文档');
-  const res = await fetchJson<TrashBatchResult>(
-    `${API_BASE}/trash/restore`,
-    jsonInit('POST', { names }),
-  );
-  if (res.restored?.length) {
-    clearContentCache();
-    await bootstrapData(); // 刷新文章快照，恢复的文章立刻出现在列表里
-  }
-  return res;
-}
-
-/** 批量彻底删除：直接从磁盘移除，不可恢复 */
-export async function purgeTrash(names: string[]): Promise<TrashBatchResult> {
-  if (!canWrite()) throw new Error('当前为只读模式，无法彻底删除文档');
-  return fetchJson<TrashBatchResult>(`${API_BASE}/trash`, jsonInit('DELETE', { names }));
 }

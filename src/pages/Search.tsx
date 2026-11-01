@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Pagination } from 'antd';
 import { ARTICLE_PAGE_SIZE, getAllArticles, getCategory, getTag } from '@/data/articles';
+import { localizeArticleIndex } from '@/data/localize';
 import { getDataState } from '@/data/store';
 import ArticleRow from './ArticleRow';
 import styles from './Search.module.less';
@@ -21,6 +23,7 @@ interface SearchResult {
 }
 
 export default function Search() {
+  const { t, i18n } = useTranslation();
   const [params] = useSearchParams();
   const q = (params.get('q') ?? '').trim();
   const [page, setPage] = useState(1);
@@ -66,13 +69,14 @@ export default function Search() {
       return [...serverResults, ...extra];
     }
     return getAllArticles().filter((a) => {
-      if (a.title.toLowerCase().includes(needle)) return true;
-      if (a.summary.toLowerCase().includes(needle)) return true;
+      const item = localizeArticleIndex(a, i18n.language);
+      if (item.title.toLowerCase().includes(needle)) return true;
+      if (item.summary.toLowerCase().includes(needle)) return true;
       const cat = getCategory(a.category);
       if (cat && cat.name.toLowerCase().includes(needle)) return true;
       return a.tags.some((t) => getTag(t)?.name.toLowerCase().includes(needle));
     });
-  }, [q, isApi, serverResults]);
+  }, [q, isApi, serverResults, i18n.language]);
 
   const total = results.length;
   const pageSize = ARTICLE_PAGE_SIZE;
@@ -87,30 +91,22 @@ export default function Search() {
   return (
     <div className={styles.page}>
       <div className={styles.crumb}>
-        <Link to="/">首页</Link>
+        <Link to="/">{t('nav.home')}</Link>
         <span className={styles.crumbSep}>/</span>
-        <span>搜索</span>
+        <span>{t('search.crumb')}</span>
       </div>
 
       <header className={styles.header}>
         <h1 className={styles.title}>
-          {q ? (
-            <>
-              搜索“<span className={styles.keyword}>{q}</span>”
-            </>
-          ) : (
-            '搜索'
-          )}
+          {q ? t('search.heading', { query: q }) : t('search.title')}
         </h1>
         <p className={styles.subtitle}>
-          {q
-            ? `找到 ${total} 篇相关文章`
-            : '在顶部搜索框输入关键词，可搜标题、摘要、分类、标签与正文'}
+          {q ? t('search.results', { count: total }) : t('search.tip')}
         </p>
       </header>
 
       {q && pageResults.length === 0 ? (
-        <div className={styles.empty}>未找到与“{q}”相关的文章，换个关键词试试</div>
+        <div className={styles.empty}>{t('search.empty', { query: q })}</div>
       ) : (
         <>
           <div className={styles.list}>
@@ -131,7 +127,7 @@ export default function Search() {
                 pageSize={pageSize}
                 onChange={handlePageChange}
                 showSizeChanger={false}
-                showTotal={(t) => `共 ${t} 篇`}
+                showTotal={(count) => t('list.total', { count })}
               />
             </div>
           )}

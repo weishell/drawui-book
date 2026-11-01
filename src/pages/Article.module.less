@@ -39,6 +39,39 @@
   color: @text-secondary;
 }
 
+/* 语言切换：7 种语言一键换正文，和 /drawui 文档区同一种芯片样式 */
+.langRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.langChip {
+  min-width: 24px;
+  padding: 2px 6px;
+  border: 1px solid @border-color-light;
+  border-radius: 6px;
+  background: transparent;
+  color: @text-tertiary;
+  font-size: 11px;
+  line-height: 1.4;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    color: var(--theme-primary);
+    border-color: var(--theme-primary);
+  }
+}
+
+.langChipActive {
+  color: var(--theme-primary);
+  border-color: var(--theme-primary);
+  background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
+}
+
 /* ========== 正文（编辑器） ========== */
 .editorWrap {
   border-radius: 16px;
@@ -77,7 +110,7 @@
   font-size: 12px;
   font-family: inherit;
   color: #cf1322;
-  cursor: var(--cursor-pointer, pointer);
+  cursor: pointer;
   transition: background-color 0.15s ease;
 
   &:hover {

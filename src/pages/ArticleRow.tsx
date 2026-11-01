@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getCategory, getTag, type ArticleIndex } from '@/data/articles';
+import { localizeArticleIndex } from '@/data/localize';
 import styles from './ArticleRow.module.less';
 
 export default function ArticleRow({
@@ -10,11 +12,13 @@ export default function ArticleRow({
   /** 全文搜索命中的正文片段，有就显示在摘要下方 */
   snippet?: string;
 }) {
+  const { t, i18n } = useTranslation();
+  const item = localizeArticleIndex(article, i18n.language);
   const cat = getCategory(article.category);
   return (
     <Link to={`/article/${article.id}`} className={styles.row}>
-      <div className={styles.rowTitle}>{article.title}</div>
-      <div className={styles.rowSummary}>{article.summary}</div>
+      <div className={styles.rowTitle}>{item.title}</div>
+      <div className={styles.rowSummary}>{item.summary}</div>
       {snippet && <div className={styles.rowSnippet}>{snippet}</div>}
       <div className={styles.rowMeta}>
         {cat && (
@@ -32,7 +36,7 @@ export default function ArticleRow({
           ) : null;
         })}
         <span className={styles.rowDate}>{article.date}</span>
-        <span className={styles.rowReads}>{article.reads} 次阅读</span>
+        <span className={styles.rowReads}>{t('list.reads', { count: article.reads })}</span>
       </div>
     </Link>
   );

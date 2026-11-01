@@ -1,7 +1,6 @@
 // 数据内存态：启动时灌一次快照，之后页面同步读取
 // 这样列表页不需要改成异步组件 —— 保持原来的同步选择器 API
-import type { Descendant } from 'slate';
-import type { ArticleIndex, Category, DataSource, Tag } from './types';
+import type { Article, ArticleIndex, Category, DataSource, Tag } from './types';
 
 interface DataState {
   categories: Category[];
@@ -10,10 +9,10 @@ interface DataState {
   source: DataSource;
 }
 
-let state: DataState = { categories: [], tags: [], articles: [], source: 'demo' };
+let state: DataState = { categories: [], tags: [], articles: [], source: 'offline' };
 
-/** 正文缓存：按篇懒加载，避免每次进详情都请求 */
-const contentCache = new Map<string, Descendant[]>();
+/** 详情缓存：按篇懒加载；缓存整篇（含多语言变体），语言切换时不用重新请求 */
+const articleCache = new Map<string, Article>();
 
 export const getDataState = (): DataState => state;
 
@@ -24,8 +23,8 @@ export function setDataState(patch: Partial<DataState>) {
 /** 只有本地后端（api）可写；线上静态快照与内置示例都是只读 */
 export const canWrite = () => state.source === 'api';
 
-export const getCachedContent = (id: string) => contentCache.get(id);
-export const setCachedContent = (id: string, content: Descendant[]) => {
-  contentCache.set(id, content);
+export const getCachedArticle = (id: string) => articleCache.get(id);
+export const setCachedArticle = (id: string, article: Article) => {
+  articleCache.set(id, article);
 };
-export const clearContentCache = () => contentCache.clear();
+export const clearArticleCache = () => articleCache.clear();
